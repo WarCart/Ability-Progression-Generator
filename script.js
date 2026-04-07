@@ -23,7 +23,8 @@ function loadConfigs() {
                             races: data.races || [],
                             factions: data.factions || [],
                             fightingStyles: data.fightingStyles || [],
-                            devilFruits: data.devilFruits || []
+                            devilFruits: data.devilFruits || [],
+                            quests: data.quests || []
                         });
                     });
             });
@@ -35,7 +36,8 @@ function loadConfigs() {
                 abilityNames: "abilities",
                 factionNames: "factions",
                 fightingStyleNames: "fightingStyles",
-                devilFruitNames: "devilFruits"
+                devilFruitNames: "devilFruits",
+                questNames: "quests"
             };
             for (let listId in lists) {
                 let datalist = document.getElementById(listId);
@@ -138,7 +140,7 @@ const REQ_TYPES = {
     },
     "ability_progression:quest": {
         label: "Quest",
-        args: [{ key: "questID", label: "Quest ID", type: "text", prefixModId: true }]
+        args: [{ key: "questID", label: "Quest ID", type: "text", prefixModId: true, listId: "questNames" }]
     },
     "ability_progression:haoshoku_born": {
         label: "Haoshoku Born",
@@ -146,7 +148,7 @@ const REQ_TYPES = {
     },
     "ability_progression:unlocked_ability": {
         label: "Unlocked Ability",
-        args: [{ key: "ability", label: "Ability", type: "text", prefixModId: true }]
+        args: [{ key: "ability", label: "Ability", type: "text", prefixModId: true, listId: "abilityNames" }]
     },
     "ability_progression:default": {
         label: "Default",
@@ -159,7 +161,7 @@ const REQ_TYPES = {
     "ability_progression:ability_used": {
         label: "Ability Used",
         args: [
-            { key: "abilityID", label: "Ability ID", type: "text", prefixModId: true },
+            { key: "abilityID", label: "Ability ID", type: "text", prefixModId: true, listId: "abilityNames" },
             { key: "timesUsed", label: "Times Used", type: "number" }
         ]
     }
@@ -177,16 +179,20 @@ const MODIFIER_TYPES = [
 
 // --- UI functions ---
 
+let abilityCardCount = 0;
+
 function addAbility() {
     let container = document.getElementById("abilities");
     let card = document.createElement("div");
     card.className = "ability-card";
+    let listId = "abilityNames_" + abilityCardCount++;
     card.innerHTML =
         '<div>' +
             '<label>Ability name: </label>' +
-            '<input type="text" class="ability-name" list="abilityNames" placeholder="e.g. gomu_gomu_no_pistol">' +
+            '<input type="text" class="ability-name" list="' + listId + '" placeholder="e.g. gomu_gomu_no_pistol">' +
+            '<datalist id="' + listId + '"></datalist>' +
             ' <label>Directory: </label>' +
-            '<select class="dir-select"></select>' +
+            '<select class="dir-select" onchange="updateAbilityList(this)"></select>' +
             ' <button class="remove" onclick="this.closest(\'.ability-card\').remove()">Remove Ability</button>' +
         '</div>' +
         '<div class="req-groups"><strong>Requirements</strong> (each group is OR, requirements within a group are AND)</div>' +
@@ -196,6 +202,23 @@ function addAbility() {
     container.appendChild(card);
 
     updateDirSelect(card.querySelector(".dir-select"));
+    updateAbilityList(card.querySelector(".dir-select"));
+    return card;
+}
+
+function updateAbilityList(dirSelect) {
+    let card = dirSelect.closest(".ability-card");
+    let datalist = card.querySelector("datalist");
+    datalist.innerHTML = "";
+    let modId = dirSelect.value;
+    let config = configs.find(function(c) { return c.modId === modId; });
+    if (config) {
+        for (let ability of config.abilities) {
+            let opt = document.createElement("option");
+            opt.value = ability;
+            datalist.appendChild(opt);
+        }
+    }
 }
 
 function addRequirementGroup(abilityCard) {
@@ -208,6 +231,7 @@ function addRequirementGroup(abilityCard) {
         '<div class="req-list"></div>' +
         '<button onclick="addRequirement(this.parentElement)">Add Requirement</button>';
     groupsContainer.appendChild(group);
+    return group;
 }
 
 function addRequirement(groupEl) {
@@ -293,7 +317,7 @@ function onRequirementTypeChange(selectEl) {
 }
 
 function generateUUID() {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+    return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
         let r = Math.random() * 16 | 0;
         let v = c === "x" ? r : (r & 0x3 | 0x8);
         return v.toString(16);
@@ -350,10 +374,12 @@ function gatherAbilities() {
                         req.args[key] = inp.value;
                     } else {
                         let val = inp.value;
-                        if (inp.dataset.prefixModId && val) {
-                            val = modId + ":" + val;
-                        } else if (inp.dataset.prefixSubRace && val && subRacePrefixMap[val]) {
-                            val = modId + ":" + val;
+                        if (val && !val.includes(":")) {
+                            if (inp.dataset.prefixModId) {
+                                val = modId + ":" + val;
+                            } else if (inp.dataset.prefixSubRace && subRacePrefixMap[val]) {
+                                val = modId + ":" + val;
+                            }
                         }
                         req.args[key] = val;
                     }
@@ -426,5 +452,79 @@ function createZip() {
 
     zip.generateAsync({ type: "blob" }).then(function(content) {
         saveAs(content, name + ".zip");
+    });
+}
+
+// --- Import ---
+
+function importZip(file) {
+    if (!file) return;
+    JSZip.loadAsync(file).then(function(zip) {
+        zip.forEach(function(path, entry) {
+            // Match files like data/<modId>/abilities/<name>.json
+            let match = path.match(/^data\/([^/]+)\/abilities\/([^/]+)\.json$/);
+            if (!match || entry.dir) return;
+
+            let modId = match[1];
+            let abilityName = match[2];
+
+            entry.async("string").then(function(content) {
+                let data = JSON.parse(content);
+                let card = addAbility();
+
+                card.querySelector(".ability-name").value = abilityName;
+                let dirSelect = card.querySelector(".dir-select");
+                dirSelect.value = modId;
+
+                // Import requirements
+                if (data.requirements) {
+                    for (let group of data.requirements) {
+                        let groupEl = addRequirementGroup(card);
+                        for (let req of group) {
+                            addRequirement(groupEl);
+                            let rows = groupEl.querySelectorAll(".req-row");
+                            let row = rows[rows.length - 1];
+
+                            let typeSelect = row.querySelector(".req-type");
+                            typeSelect.value = req.name;
+                            onRequirementTypeChange(typeSelect);
+
+                            if (req.args) {
+                                for (let key in req.args) {
+                                    let inp = row.querySelector("[data-arg-key='" + key + "']");
+                                    if (!inp) continue;
+                                    if (inp.type === "checkbox") {
+                                        inp.checked = req.args[key];
+                                    } else {
+                                        inp.value = req.args[key];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Import modifiers
+                if (data.modifiers) {
+                    for (let stat in data.modifiers) {
+                        let entries = data.modifiers[stat];
+                        for (let entryObj of entries) {
+                            for (let uuid in entryObj) {
+                                let mod = entryObj[uuid];
+                                addModifier(card);
+                                let modRows = card.querySelectorAll(".mod-row");
+                                let row = modRows[modRows.length - 1];
+
+                                row.querySelector(".mod-uuid").value = uuid;
+                                row.querySelector(".mod-stat").value = stat;
+                                row.querySelector(".mod-name").value = mod.name || "";
+                                row.querySelector(".mod-op").value = mod.type || "ADDITION";
+                                row.querySelector(".mod-value").value = mod.value || 0;
+                            }
+                        }
+                    }
+                }
+            });
+        });
     });
 }

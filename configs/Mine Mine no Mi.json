@@ -1,4 +1,13 @@
 {
-  "dir": "data/mineminenomi/abilities",
-  "abilities": []
+  "modId": "mineminenomi",
+  "abilities": ["gomu_gomu_no_pistol"],
+  "races": ["human", "fishman", "cyborg",
+    {
+      "name": "mink",
+      "subraces": ["lion", "dog", "bunny"],
+      "prefixSubRaces": false
+    }],
+  "factions": [],
+  "fightingStyles": [],
+  "devilFruits": []
 }

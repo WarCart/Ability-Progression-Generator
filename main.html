@@ -3,11 +3,35 @@
     <head>
         <meta charset="UTF-8">
         <title>Ability Progression creator</title>
+        <style>
+            .ability-card { border: 1px solid #999; padding: 10px; margin: 10px 0; }
+            .req-group { border: 1px solid #ccc; padding: 8px; margin: 6px 0; }
+            .req-row, .mod-row { padding: 4px 0; }
+            .req-args { display: inline; }
+            button.remove { color: red; }
+            label { margin-right: 4px; }
+        </style>
     </head>
     <body>
-        <input type="button" value="Create" onClick="createZip()">
+        <h2>Ability Progression Generator</h2>
+
+        <span id="configStatus">Loading configs...</span>
+        <hr>
+
+        <div id="abilities"></div>
+        <datalist id="abilityNames"></datalist>
+        <datalist id="raceNames"></datalist>
+        <datalist id="subRaceNames"></datalist>
+        <datalist id="factionNames"></datalist>
+        <datalist id="fightingStyleNames"></datalist>
+        <datalist id="devilFruitNames"></datalist>
+
+        <button onclick="addAbility()">Add Ability</button>
+        <button onclick="createZip()">Create Zip</button>
+
         <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script src="script.js"></script>
+        <script>loadConfigs();</script>
     </body>
 </html>

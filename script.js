@@ -346,7 +346,7 @@ function addModifier(abilityCard) {
 
 function gatherAbilities() {
     let abilities = [];
-    let cards = document.querySelectorAll(".ability-card");
+    let cards = document.querySelectorAll(".ability-card:not(.awakening-card)");
 
     for (let card of cards) {
         let name = card.querySelector(".ability-name").value.trim();
@@ -425,12 +425,92 @@ function gatherAbilities() {
     return abilities;
 }
 
+// --- Awakening UI ---
+
+function addAwakening() {
+    let container = document.getElementById("awakenings");
+    let card = document.createElement("div");
+    card.className = "ability-card awakening-card";
+    card.innerHTML =
+        '<div>' +
+            '<label>Devil Fruit: </label>' +
+            '<input type="text" class="awakening-fruit" list="devilFruitNames" placeholder="e.g. gomu_gomu_no_mi">' +
+            ' <label>Mod: </label>' +
+            '<select class="dir-select"></select>' +
+            ' <button class="remove" onclick="this.closest(\'.awakening-card\').remove()">Remove Awakening</button>' +
+        '</div>' +
+        '<div class="req-groups"><strong>Requirements</strong> (each group is OR, requirements within a group are AND)</div>' +
+        '<button onclick="addRequirementGroup(this.parentElement)">Add Requirement Group</button>';
+    container.appendChild(card);
+
+    updateDirSelect(card.querySelector(".dir-select"));
+    return card;
+}
+
+function gatherAwakenings() {
+    let awakenings = [];
+    let cards = document.querySelectorAll(".awakening-card");
+
+    for (let card of cards) {
+        let fruit = card.querySelector(".awakening-fruit").value.trim();
+        let modId = card.querySelector(".dir-select").value;
+
+        if (!fruit) continue;
+
+        let requirements = [];
+        let groups = card.querySelectorAll(".req-group");
+        for (let group of groups) {
+            let andGroup = [];
+            let rows = group.querySelectorAll(".req-row");
+            for (let row of rows) {
+                let typeSelect = row.querySelector(".req-type");
+                if (!typeSelect.value) continue;
+
+                let req = { name: typeSelect.value, args: {} };
+                let argInputs = row.querySelectorAll("[data-arg-key]");
+                for (let inp of argInputs) {
+                    let key = inp.dataset.argKey;
+                    if (inp.type === "checkbox") {
+                        req.args[key] = inp.checked;
+                    } else if (inp.type === "number") {
+                        req.args[key] = inp.value;
+                    } else {
+                        let val = inp.value;
+                        if (val && !val.includes(":")) {
+                            if (inp.dataset.prefixModId) {
+                                val = modId + ":" + val;
+                            } else if (inp.dataset.prefixSubRace && subRacePrefixMap[val]) {
+                                val = modId + ":" + val;
+                            }
+                        }
+                        req.args[key] = val;
+                    }
+                }
+                andGroup.push(req);
+            }
+            if (andGroup.length > 0) {
+                requirements.push(andGroup);
+            }
+        }
+
+        let data = {};
+        if (requirements.length > 0) {
+            data.requirements = requirements;
+        }
+
+        awakenings.push({ fruit: fruit, modId: modId, data: data });
+    }
+
+    return awakenings;
+}
+
 // --- Zip creation ---
 
 function createZip() {
     let abilities = gatherAbilities();
-    if (abilities.length === 0) {
-        alert("No abilities to export.");
+    let awakenings = gatherAwakenings();
+    if (abilities.length === 0 && awakenings.length === 0) {
+        alert("No abilities or awakenings to export.");
         return;
     }
 
@@ -450,6 +530,11 @@ function createZip() {
         folder.file(ability.name + ".json", prettyJson(ability.data));
     }
 
+    for (let awk of awakenings) {
+        let folder = zip.folder("data/" + awk.modId + "/awakenings");
+        folder.file(awk.fruit + ".json", prettyJson(awk.data));
+    }
+
     zip.generateAsync({ type: "blob" }).then(function(content) {
         saveAs(content, name + ".zip");
     });
@@ -457,52 +542,60 @@ function createZip() {
 
 // --- Import ---
 
+function importRequirements(card, data) {
+    if (data.requirements) {
+        for (let group of data.requirements) {
+            let groupEl = addRequirementGroup(card);
+            for (let req of group) {
+                addRequirement(groupEl);
+                let rows = groupEl.querySelectorAll(".req-row");
+                let row = rows[rows.length - 1];
+
+                let typeSelect = row.querySelector(".req-type");
+                typeSelect.value = req.name;
+                onRequirementTypeChange(typeSelect);
+
+                if (req.args) {
+                    for (let key in req.args) {
+                        let inp = row.querySelector("[data-arg-key='" + key + "']");
+                        if (!inp) continue;
+                        if (inp.type === "checkbox") {
+                            inp.checked = req.args[key];
+                        } else {
+                            inp.value = req.args[key];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 function importZip(file) {
     if (!file) return;
     JSZip.loadAsync(file).then(function(zip) {
         zip.forEach(function(path, entry) {
-            // Match files like data/<modId>/abilities/<name>.json
-            let match = path.match(/^data\/([^/]+)\/abilities\/([^/]+)\.json$/);
-            if (!match || entry.dir) return;
+            if (entry.dir) return;
 
-            let modId = match[1];
-            let abilityName = match[2];
+            // Match abilities
+            let abilityMatch = path.match(/^data\/([^/]+)\/abilities\/([^/]+)\.json$/);
+            // Match awakenings
+            let awakeningMatch = path.match(/^data\/([^/]+)\/awakenings\/([^/]+)\.json$/);
 
-            entry.async("string").then(function(content) {
-                let data = JSON.parse(content);
-                let card = addAbility();
+            if (abilityMatch) {
+                let modId = abilityMatch[1];
+                let abilityName = abilityMatch[2];
+
+                entry.async("string").then(function(content) {
+                    let data = JSON.parse(content);
+                    let card = addAbility();
 
                 card.querySelector(".ability-name").value = abilityName;
                 let dirSelect = card.querySelector(".dir-select");
                 dirSelect.value = modId;
+                updateAbilityList(dirSelect);
 
-                // Import requirements
-                if (data.requirements) {
-                    for (let group of data.requirements) {
-                        let groupEl = addRequirementGroup(card);
-                        for (let req of group) {
-                            addRequirement(groupEl);
-                            let rows = groupEl.querySelectorAll(".req-row");
-                            let row = rows[rows.length - 1];
-
-                            let typeSelect = row.querySelector(".req-type");
-                            typeSelect.value = req.name;
-                            onRequirementTypeChange(typeSelect);
-
-                            if (req.args) {
-                                for (let key in req.args) {
-                                    let inp = row.querySelector("[data-arg-key='" + key + "']");
-                                    if (!inp) continue;
-                                    if (inp.type === "checkbox") {
-                                        inp.checked = req.args[key];
-                                    } else {
-                                        inp.value = req.args[key];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                importRequirements(card, data);
 
                 // Import modifiers
                 if (data.modifiers) {
@@ -525,6 +618,20 @@ function importZip(file) {
                     }
                 }
             });
+            } else if (awakeningMatch) {
+                let modId = awakeningMatch[1];
+                let fruitName = awakeningMatch[2];
+
+                entry.async("string").then(function(content) {
+                    let data = JSON.parse(content);
+                    let card = addAwakening();
+
+                    card.querySelector(".awakening-fruit").value = fruitName;
+                    card.querySelector(".dir-select").value = modId;
+
+                    importRequirements(card, data);
+                });
+            }
         });
     });
 }

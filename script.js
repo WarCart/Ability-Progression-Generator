@@ -76,11 +76,11 @@ function loadConfigs() {
             for (let select of document.querySelectorAll(".dir-select")) {
                 updateDirSelect(select);
             }
-            document.getElementById("configStatus").textContent = configs.length + " config(s) loaded";
+            console.log(configs.length + " config(s) loaded");
         })
         .catch(function(err) {
             console.error("Failed to load configs:", err);
-            document.getElementById("configStatus").textContent = "Failed to load configs (are you using a local server?)";
+            console.error("Failed to load configs (are you using a local server?)");
         });
 }
 

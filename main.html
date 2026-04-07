@@ -2,22 +2,18 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto&display=swap">
+        <link rel="icon" href="df_prog.png" type="image/png">
+        <link rel="stylesheet" href="style.css">
         <title>Ability Progression creator</title>
-        <style>
-            .ability-card { border: 1px solid #999; padding: 10px; margin: 10px 0; }
-            .req-group { border: 1px solid #ccc; padding: 8px; margin: 6px 0; }
-            .req-row, .mod-row { padding: 4px 0; }
-            .req-args { display: inline; }
-            button.remove { color: red; }
-            label { margin-right: 4px; }
-        </style>
     </head>
     <body>
         <h2>Ability Progression Generator</h2>
-
-        <span id="configStatus">Loading configs...</span>
         <hr>
 
+        <h3>Abilities</h3>
         <div id="abilities"></div>
         <datalist id="abilityNames"></datalist>
         <datalist id="raceNames"></datalist>
@@ -27,14 +23,18 @@
         <datalist id="devilFruitNames"></datalist>
         <datalist id="questNames"></datalist>
 
-        <button onclick="addAbility()">Add Ability</button>
+        <button class="add-btn" onclick="addAbility()">+ Add Ability</button>
         <hr>
+
         <h3>Awakenings</h3>
         <div id="awakenings"></div>
-        <button onclick="addAwakening()">Add Awakening</button>
+        <button class="add-btn" onclick="addAwakening()">+ Add Awakening</button>
         <hr>
-        <button onclick="createZip()">Create Zip</button>
-        <label> Import datapack: <input type="file" accept=".zip" onchange="importZip(this.files[0])"></label>
+
+        <div class="footer">
+            <button onclick="createZip()">Create Zip</button>
+            <label>Import datapack: <input type="file" accept=".zip" onchange="importZip(this.files[0])"></label>
+        </div>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>

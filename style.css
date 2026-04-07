@@ -1,0 +1,200 @@
+* { box-sizing: border-box; }
+
+body {
+    font-family: Roboto, sans-serif;
+    background: #303030;
+    color: #fff;
+    text-shadow: 2px 2px #0006;
+    margin: 0;
+    padding: 20px 40px;
+    line-height: 1.6;
+}
+
+h2 {
+    color: #6ebf70;
+    margin-bottom: 4px;
+    font-weight: 400;
+}
+
+h3 {
+    color: #6ebf70;
+    margin: 0;
+    font-weight: 400;
+}
+
+hr {
+    color: #8c8c8c;
+    border: none;
+    border-top: double #8c8c8c;
+    margin: 24px 0 16px;
+}
+
+#configStatus {
+    font-size: 13px;
+    color: #999;
+    text-shadow: none;
+}
+
+/* Inputs & selects */
+input[type="text"],
+input[type="number"],
+select {
+    background: #262626;
+    color: #fff;
+    border: 1px solid #4f4f4f;
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-family: Roboto, sans-serif;
+    outline: none;
+    text-shadow: none;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+    border-color: #4cae4f;
+}
+
+input[type="file"] {
+    font-size: 13px;
+    color: #ccc;
+}
+
+label {
+    margin-right: 4px;
+    font-size: 13px;
+    color: #bbb;
+}
+
+/* Buttons */
+button {
+    background-image: linear-gradient(#4cae4f, #3d8a3f);
+    color: #fff;
+    text-shadow: 2px 2px #0008;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-family: Roboto, sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background-image: linear-gradient(#6ebf70, #4cae4f);
+}
+
+button:active {
+    filter: brightness(1.5);
+}
+
+button.remove {
+    background-image: none;
+    background: transparent;
+    color: #d93b36;
+    text-shadow: none;
+    border: 1px solid #d93b36;
+    padding: 3px 10px;
+    font-size: 12px;
+}
+
+button.remove:hover {
+    background: #d93b36;
+    color: #fff;
+    text-shadow: 2px 2px #0008;
+}
+
+button.add-btn {
+    background-image: none;
+    background: #3b3b3b;
+    border: 1px dashed #4cae4f;
+    color: #6ebf70;
+    text-shadow: none;
+    margin-top: 8px;
+}
+
+button.add-btn:hover {
+    background: #4f4f4f;
+}
+
+/* Cards */
+.ability-card {
+    background: #262626;
+    border: 1px solid #3b3b3b;
+    border-left: 3px solid #4cae4f;
+    border-radius: 5px;
+    padding: 14px 16px;
+    margin: 10px 0;
+    box-shadow: 0 3px 5px -1px #0003, 0 5px 8px #00000024, 0 1px 14px #0000001f;
+}
+
+.awakening-card {
+    border-left-color: #d99a36;
+}
+
+.ability-card > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Requirement groups */
+.req-groups > strong,
+.modifiers > strong {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: gray;
+}
+
+.req-group {
+    background: #303030;
+    border: 1px solid #3b3b3b;
+    border-radius: 5px;
+    padding: 10px 12px;
+    margin: 6px 0;
+}
+
+.req-group > em {
+    font-size: 12px;
+    color: gray;
+    font-style: normal;
+}
+
+.req-row, .mod-row {
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.req-args {
+    display: inline;
+}
+
+.req-args label {
+    color: #999;
+}
+
+/* Modifier rows */
+.mod-row {
+    background: #303030;
+    border-radius: 5px;
+    padding: 8px 10px;
+    margin: 4px 0;
+}
+
+/* Footer area */
+.footer {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}

@@ -336,7 +336,7 @@ function addModifier(abilityCard) {
         '</select>' +
         ' <label>Name: </label><input type="text" class="mod-name" placeholder="bonus_name">' +
         ' <label>Operation: </label>' +
-        '<select class="mod-op"><option value="ADDITION">ADDITION</option><option value="MULTIPLICATION">MULTIPLICATION</option></select>' +
+        '<select class="mod-op"><option value="ADD">ADD</option><option value="MULTIPLICATION">MULTIPLICATION</option></select>' +
         ' <label>Value: </label><input type="number" class="mod-value" step="any" style="width:80px">' +
         ' <button class="remove" onclick="this.closest(\'.mod-row\').remove()">Remove</button>';
     modContainer.appendChild(row);
@@ -611,7 +611,7 @@ function importZip(file) {
                                 row.querySelector(".mod-uuid").value = uuid;
                                 row.querySelector(".mod-stat").value = stat;
                                 row.querySelector(".mod-name").value = mod.name || "";
-                                row.querySelector(".mod-op").value = mod.type || "ADDITION";
+                                row.querySelector(".mod-op").value = mod.type || "ADD";
                                 row.querySelector(".mod-value").value = mod.value || 0;
                             }
                         }
